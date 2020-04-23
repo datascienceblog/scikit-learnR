@@ -1,0 +1,195 @@
+---
+title: "Python setup in R with Reticulate"
+author: "Business Science"
+date: "23/04/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+## 2 Steps to Python
+
+With only 2 steps, we are able to use Python in R!
+
+### Step 1 – Reticulate Setup
+
+Fire up an R Markdown document and load _tidyverse_ and _reticulate_:
+
+1. tidyverse – Loads the core data wrangling and visualization packages needed to work in R.
+
+2. reticulate – The key link between R and Python.
+
+### Step 2 – Reticulate Setup
+
+Next, we need to make sure we have the Python Environment setup that we want to use. For Python Environments, we will use Anaconda (Conda), a python environment management tool specifically developed for data scientists.
+
+## R code chunk in reading
+
+```{r}
+library(tidyverse)
+library(reticulate)
+
+use_condaenv("py3.8", required = TRUE)
+```
+
+```{r}
+py_run_string("import os as os")
+py_run_string("os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/2015524/Anaconda3/envs/py3.8/Library/plugins/platforms'")
+```
+
+## Create a New Python Environment
+
+* Run the following code in **your conda terminal**.
+
+```{r eval=FALSE}
+conda create -n py3.8 python=3.8 scikit-learn pandas numpy matplotlib
+```
+
+This code does the following:
+
+1. Creates a new Python environment called "py3.8"
+2. Installs python version 3.8
+3. Installs the latest versions of scikit-learn, pandas, numpy, and matplotlib.
+
+## List your Conda Enviromnents (in R Markdown)
+
+Back in R Markdown, we can do the same thing using retculate::conda_list().
+
+```{r echo=TRUE}
+conda_list()
+```
+
+## Set Your Conda Environment (in R Markdown)
+
+Make sure your R Markdown document activates the “py3.8” environment using use_condaenv().
+
+```{r eval=FALSE}
+use_condaenv("py3.8", required = TRUE)
+```
+
+Double check that reticulate is actually using your new conda env.
+
+```{r echo=TRUE}
+py_config()
+```
+
+## Python Tests
+
+All of the code in this section uses python code chunks. This means you need to use {python} instead of {r} code chunks.
+
+*	**Errors in this section**: Are likely because you have a code chunk with {r} (it’s super easy to make this mistake)
+
+*	**Solution**: Replace _{r} _ with _{python}_.
+
+![](images/pythonR.jpg)
+
+## Test 1 - Is Python working?
+
+* Let's add 1+1
+* You should see 2
+
+Is python working?
+
+```{python}
+1+1
+```
+
+## Test 2 - Numpy & Pandas
+
+* Import **numpy** and **pandas** using the import shorthand **np** and **pd**, respectively.
+* numpy – Math Calculations
+* pandas – Data Wrangling
+
+```{python}
+import numpy as np
+import pandas as pd
+```
+
+```{python}
+np.arange(1, 10)
+```
+
+```{python}
+df = pd.DataFrame(data = {"sequence":np.arange(1,20,.01)})
+df = df.assign(value=np.sin(df["sequence"]))
+```
+
+## Test 3 - Matplotlib
+
+Run the following pandas plotting code. If the visualization appears, matplotlib is installed.
+
+```{python}
+import matplotlib as plt
+
+df.plot(x="sequence", y = "value", title = "Matplotlib")
+```
+
+## Test 4 – Scikit Learn
+
+Run a test Random Forest using RandomForestClassifier from the sklearn.ensemble module of Scikit Learn.
+
+```{python}
+from sklearn.ensemble import RandomForestClassifier
+
+clf = RandomForestClassifier(random_state=0)
+
+X = [[ 1,  2,  3],  # 2 samples, 3 features
+     [11, 12, 13]]
+
+y = [0, 1]  # classes of each sample
+```
+
+```{python echo=TRUE}
+clf.fit(X, y)
+```
+
+## Can you Run Affinity Progagation???
+
+A simple test is to run the AffinityPropagation test from [Scikit Learn’s website](https://scikit-learn.org/stable/auto_examples/cluster/plot_affinity_propagation.html#sphx-glr-auto-examples-cluster-plot-affinity-propagation-py).
+
+```{python}
+from sklearn.cluster import AffinityPropagation
+from sklearn.datasets import make_blobs
+
+# #############################################################################
+# Generate sample data
+centers = [[1, 1], [-1, -1], [1, -1]]
+X, labels_true = make_blobs(n_samples=300, centers=centers, cluster_std=0.5,
+                            random_state=0)
+
+# Compute Affinity Propagation
+af = AffinityPropagation(preference=-50).fit(X)
+cluster_centers_indices = af.cluster_centers_indices_
+labels = af.labels_
+
+n_clusters_ = len(cluster_centers_indices)
+
+# #############################################################################
+# Plot result
+import matplotlib.pyplot as plt
+from itertools import cycle
+
+plt.close('all')
+plt.figure(1)
+plt.clf()
+
+colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+for k, col in zip(range(n_clusters_), colors):
+    class_members = labels == k
+    cluster_center = X[cluster_centers_indices[k]]
+    plt.plot(X[class_members, 0], X[class_members, 1], col + '.')
+    plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
+             markeredgecolor='k', markersize=14)
+    for x in X[class_members]:
+        plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)
+
+plt.title('Estimated number of clusters: %d' % n_clusters_)
+plt.show()
+```
+
